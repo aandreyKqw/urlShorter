@@ -1,15 +1,19 @@
-package server
+package Server
 
-import "net/http"
+import (
+	"net/http"
+	"urlshort/iternal/handlers"
 
-func helloworld(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello world"))
-}
+	"github.com/jackc/pgx/v5/pgxpool"
+)
 
 func MakeNewRouter() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/helloworld", helloworld)
-
 	return mux
+}
+
+func ListHandlers(conn *pgxpool.Pool, mux *http.ServeMux) {
+	mux.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) { handlers.Create(conn, w, r) })
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { handlers.SwapOnRealSite(conn, w, r) })
 }

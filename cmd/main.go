@@ -1,16 +1,30 @@
 package main
 
 import (
+	"fmt"
+	"io"
+	"log"
+	"os"
 	"urlshort/iternal/db"
-	"urlshort/iternal/server"
+	Server "urlshort/iternal/server"
 )
 
 func main() {
-	_ = db.Connect()
+	f, err := os.OpenFile("../logs.txt", os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Что-то не так с файлом для логов", err)
+	}
+	defer f.Close()
+	originalWriter := log.Writer()
+	multiWriter := io.MultiWriter(originalWriter, f)
+	log.SetOutput(multiWriter)
 
-	mux := server.MakeNewRouter()
-	server := server.MakeNewServ(":8080", mux)
+	conn := db.Connect()
 
-	server.Run()
+	mux := Server.MakeNewRouter()
+	server := Server.MakeNewServ(":8080", mux)
+	Server.ListHandlers(conn, mux)
+
+	Server.Run(server)
 
 }
